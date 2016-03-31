@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<style type="text/css">
+	*{
+		margin: 0;
+		border: 0;
+		padding: 0;
+	}
+	li{
+		list-style: none;
+	}
+	#ul1{
+		height:auto; overflow:hidden; margin:20px auto; border:1px #000 solid; border-bottom:none; border-right:none;
+	}
+	#ul1 li{
+		border:1px #000 solid; border-top:none; border-left:none; float:left;
+	}
+	#input{ width:100px; position:absolute; left:50%; margin-left:-50px;background-color:"#2C6787";padding: 3px;}
+	#ul1 li.s1{
+		background:red;
+	}
+	#ul1 li.s2{
+	 background:green;}
+	#ul1 li.s3{ background:blue;}
+	
+</style>
+<body>
+	<ul id="ul1">
+		
+	</ul>
+	<input type="button" value="开始" id="input">
+
+	<script type="text/javascript">
+	window.onload=function(){
+
+
+		var UL=document.getElementById("ul1");
+		var li=UL.getElementsByTagName("li");
+		var input=document.getElementById("input");
+		var start=UL.getElementsByClassName("s1");
+		var target=UL.getElementsByClassName("s2");
+		var map=[
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,3,0,3,0,0,0,0,0,0,0,0,
+			0,0,2,0,3,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,3,0,0,3,0,3,0,0,0,0,0,0,0,1,0,0,
+			0,0,0,0,3,3,3,3,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		];
+		var cols=Math.sqrt(map.length);//获取表格宽度。
+		var gridSize=20;
+		var openArr=[];   //存放路线点
+		var closeArr=[];  //存放障碍点
+		init();
+		
+		
+	
+		function init(){
+			createMap();
+			input.onclick=function(){
+				open();
+			}
+		}
+		//创建表格
+		function createMap(){
+			UL.style.width=(gridSize+1)*cols+1+"px";
+			for(var i=0;i<map.length;i++){
+				var li=document.createElement("li");
+				li.style.width=gridSize+"px";
+				li.style.height=gridSize+"px";
+				UL.appendChild(li);
+					//起始点
+				if( map[i] == 1 ){
+					li.className = 's1';
+					openArr.push(li);
+				}
+				else if(map[i] == 2){
+					li.className = 's2';
+				}//障碍物
+				else if(map[i] == 3){
+					li.className = 's3';
+					closeArr.push(li);
+				}
+
+			}
+		}
+
+		function open(){  //对路线点进行排序
+
+			var cur=openArr.shift();//把当前点弹出，存入closeArr数组
+
+			if(cur==target[0]){
+				showline();
+				return;
+			}
+			close(cur);
+
+			find(cur);//查找当前点周围的点
+
+
+			openArr.sort(function(node1,node2){  //排序，找出最小值
+				return node1.num-node2.num;//比较二者的估价值大小，以升序进行排列
+			});
+
+			// console.log(openArr);
+			open();//递归
+			
+
+		}
+
+		function close(cur){
+			closeArr.push(cur);
+
+		}
+
+		function showline(){
+			var result=[];
+			var index=0;
+			var last=closeArr.pop();
+			findParent(last);
+			function findParent(last){
+				result.unshift(last);
+				if(last.parent==start[0]){
+					return;
+				}
+				findParent(last.parent)
+			}
+			var timer=setInterval(function(){
+				result[index].style.background="red";
+				index++;
+				if(index==result.length){
+					clearInterval(timer);
+				}
+			},500);
+		}
+
+		function find(node){
+			var result=[];
+			for(var i=0;i<li.length;i++){
+				if(filter(li[i])){
+					result.push(li[i]);
+				}
+			}
+			function filter(node){//过滤障碍点,如果障碍点
+				for(var i=0;i<closeArr.length;i++){
+					if(closeArr[i]==node){
+						return false;
+					}
+				}
+				for(var i=0;i<openArr.length;i++){//过滤open中的当前点
+					if(openArr[i]==node){
+						return false;
+					}
+
+				}
+				return true;
+
+			}
+
+			for(var i=0;i<result.length;i++){  //删除重复的
+				if((Math.abs(node.offsetLeft-result[i].offsetLeft)<=gridSize+1)&&(Math.abs(node.offsetTop-result[i].offsetTop)<=gridSize+1)){ //找周围的八个点
+					result[i].num=f(result[i]);//自定义属性，存放估价的值。
+
+					result[i].parent=node;  //设置父节点指针
+
+					openArr.push(result[i]);
+				}
+			}
+
+
+
+		}
+
+		//估价函数
+
+		function f(node){
+			return g(node)+h(node);
+		}
+		//计算起始点和某点的距离
+		function g(node){
+			var x=start[0].offsetLeft-node.offsetLeft;
+			var y=start[0].offsetTop-node.offsetTop;
+			return Math.sqrt(x*x+y*y);
+		}
+		//计算某点和目标点的距离
+		function h(node){
+			var x=target[0].offsetLeft-node.offsetLeft;
+			var y=target[0].offsetTop-node.offsetTop;
+			return Math.sqrt(x*x+y*y);
+		}
+		}
+	</script>
+</body>
+</html>
